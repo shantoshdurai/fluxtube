@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YtExtracter - Premium YouTube Downloader</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-glow"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fab fa-youtube color-red"></i>
+                <span>YtExtracter</span>
+            </div>
+            <p class="subtitle">Experience premium downloads with zero limits.</p>
+        </header>
+
+        <main>
+            <section class="search-section">
+                <div class="input-wrapper">
+                    <input type="text" id="video-url" placeholder="Paste YouTube link here..." autocomplete="off">
+                    <button id="extract-btn">
+                        <span>Extract</span>
+                        <i class="fas fa-magic"></i>
+                    </button>
+                </div>
+            </section>
+
+            <div id="loader" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing video...</p>
+            </div>
+
+            <section id="video-preview" class="hidden">
+                <div class="glass-card preview-card">
+                    <div class="thumbnail-container">
+                        <img id="thumb-img" src="" alt="Thumbnail">
+                        <span id="duration-tag" class="tag">0:00</span>
+                    </div>
+                    <div class="info-container">
+                        <h2 id="video-title">Video Title</h2>
+                        <p id="video-uploader">Channel Name</p>
+                        
+                        <div class="format-tabs">
+                            <button class="active" data-type="video">Video</button>
+                            <button data-type="audio">Audio (MP3)</button>
+                        </div>
+
+                        <div id="formats-grid" class="formats-list">
+                            <!-- Formats populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="download-status" class="hidden">
+                <div class="glass-card status-card">
+                    <h3>Downloading...</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <p id="status-text">Preparing streams...</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 YtExtracter. Built for excellence.</p>
+        </footer>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>
