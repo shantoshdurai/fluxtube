@@ -23,7 +23,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blueviolet?style=for-the-badge)](LICENSE)
 
 > [!NOTE]
-> 📝 **Documentation Notice**: This README was crafted with AI assistance to help explain the project clearly and creatively. The code, however, is human-written and thoroughly tested. We believe in transparency! 🤖✨
+> 📝 **Documentation Notice**: This README was crafted with AI assistance to help explain the project clearly and creatively. The code, however, is human-written and thoroughly tested. Transparency matters! 🤖✨
 
 [🚀 Quick Start](#-quick-start) •
 [✨ Features](#-features) •
@@ -39,7 +39,7 @@
 
 > *In a world drowning in paywalls and platform lock-ins, **FluxTube** emerges as a breath of digital freedom.*
 
-We didn't build just another YouTube downloader. We crafted an **experience** — a seamless blend of raw power and elegant design. Think of it as the rebellious artist who refuses to color inside the lines, yet somehow creates a masterpiece every time.
+This isn't just another YouTube downloader. It's an **experience** — a seamless blend of raw power and elegant design. Think of it as the rebellious artist who refuses to color inside the lines, yet somehow creates a masterpiece every time.
 
 **This is not a tool. This is digital liberation with a premium aesthetic.**
 
@@ -55,7 +55,7 @@ We didn't build just another YouTube downloader. We crafted an **experience** �
 ⚡  Real-time Progress  →  Watch the magic unfold, byte by byte
 🎨  Premium UI          →  Glassmorphic design that makes you *feel* rich
 🚀  Lightning Fast      →  Async architecture because life's too short
-📱  Format Selection    →  You choose, we deliver — no compromises
+📱  Format Selection    →  You choose, it delivers — no compromises
 ```
 
 ### 🔮 **The Magic Behind the Curtain**
@@ -92,7 +92,7 @@ Imagine **dark mode** had a baby with **neon dreams** and **minimalist sophistic
 
 Before you embark on this journey, make sure you have:
 
-- **Python 3.8+** (because we're not living in 2015)
+- **Python 3.8+** (because it's 2026, not 2015)
 - **FFmpeg** (the Swiss Army knife of media processing)
   ```bash
   # Windows (PowerShell as Admin):
@@ -153,7 +153,7 @@ python main.py
 ### The Three-Step Dance
 
 1. **Paste** → Drop that YouTube URL like it's hot 🔥
-2. **Extract** → Watch as we analyze that video into oblivion 🔍
+2. **Extract** → Watch as the app analyzes that video into oblivion 🔍
 3. **Download** → Choose your format and claim your prize 🏆
 
 ### Example Use Cases
@@ -236,13 +236,13 @@ Retrieve your downloaded masterpiece
 ## 🎭 Philosophy & Design Decisions
 
 ### Why WAV for Audio?
-Because when you're importing into **Adobe Premiere Pro**, you don't want compression artifacts. We chose quality over file size. You're welcome.
+Because when you're importing into **Adobe Premiere Pro**, you don't want compression artifacts. Quality over file size, always.
 
 ### Why FastAPI?
-Async/await is not just syntax — it's a lifestyle. We believe in non-blocking I/O like we believe in coffee: essential for productivity.
+Async/await is not just syntax — it's a lifestyle. Non-blocking I/O like coffee: essential for productivity.
 
 ### Why Glassmorphism?
-Flat design is so 2018. We embraced the future with depth, blur, and transparency. It's like looking through frosted glass at digital dreams.
+Flat design is so 2018. This embraces the future with depth, blur, and transparency. It's like looking through frosted glass at digital dreams.
 
 ---
 
@@ -289,7 +289,7 @@ See [LICENSE](LICENSE) for details.
 
 ## 💌 Final Thoughts
 
-> *"In the end, we only regret the videos we didn't download."*  
+> *"In the end, you only regret the videos you didn't download."*  
 > — Ancient Internet Proverb
 
 Built with 💜, ☕, and an unhealthy amount of perfectionism.
