@@ -22,6 +22,9 @@
 [![yt-dlp](https://img.shields.io/badge/yt--dlp-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://github.com/yt-dlp/yt-dlp)
 [![License](https://img.shields.io/badge/License-MIT-blueviolet?style=for-the-badge)](LICENSE)
 
+> [!NOTE]
+> 📝 **Documentation Notice**: This README was crafted with AI assistance to help explain the project clearly and creatively. The code, however, is human-written and thoroughly tested. We believe in transparency! 🤖✨
+
 [🚀 Quick Start](#-quick-start) •
 [✨ Features](#-features) •
 [🎨 Screenshots](#-what-it-looks-like) •
