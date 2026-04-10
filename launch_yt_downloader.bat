@@ -8,6 +8,10 @@ echo.
 REM Navigate to project directory
 cd /d "%~dp0"
 
+REM Force UTF-8 to prevent encoding errors with non-ASCII video titles
+set PYTHONUTF8=1
+chcp 65001 >nul
+
 REM Check if virtual environment exists, if not create it
 if not exist "venv\" (
     echo Creating virtual environment...
@@ -24,21 +28,20 @@ REM Install/Update requirements
 echo Installing/Updating requirements...
 pip install -r requirements.txt --quiet
 
-REM Launch the Flask application
 echo.
 echo ========================================
 echo Starting YouTube Downloader...
 echo.
-echo Access the app at: http://localhost:5000
+echo Access the app at: http://localhost:8000
 echo.
 echo Press Ctrl+C to stop the server
 echo ========================================
 echo.
 
 REM Wait a moment then open browser
-start "" timeout /t 3 /nobreak >nul && start http://localhost:5000
+start "" timeout /t 3 /nobreak >nul && start http://localhost:8000
 
-REM Run the Flask app
+REM Run the app
 python main.py
 
 pause

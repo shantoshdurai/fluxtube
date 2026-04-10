@@ -71,6 +71,8 @@ This isn't just another YouTube downloader. It's an **experience** — a seamles
 
 ## 🎨 What It Looks Like
 
+![FluxTube Screenshot](image.png)
+
 Imagine **dark mode** had a baby with **neon dreams** and **minimalist sophistication**:
 
 ```css
@@ -144,7 +146,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-🎉 **Boom!** Visit `http://localhost:8000` and witness greatness.
+🎉 **Boom!** Visit `http://localhost:8080` and witness greatness.
 
 ---
 

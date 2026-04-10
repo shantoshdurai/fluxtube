@@ -28,7 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ url })
             });
 
-            if (!response.ok) throw new Error('Failed to fetch video info');
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.detail || 'Failed to fetch video info');
+            }
 
             videoData = await response.json();
             displayVideoInfo(videoData);
@@ -110,7 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            if (!response.ok) throw new Error('Download failed to start');
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.detail || 'Download failed to start');
+            }
 
             const { job_id } = await response.json();
 

@@ -1,6 +1,14 @@
 import os
+import sys
+import io
+
+# Force UTF-8 stdout/stderr on Windows to prevent charmap encode errors
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 import yt_dlp
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -147,10 +155,11 @@ def run_download(job_id, url, format_id, ext):
         download_jobs[job_id]['status'] = f'error: {err_msg}'
 
 @app.post("/download")
-async def download_video(data: DownloadRequest, background_tasks: BackgroundTasks):
+async def download_video(data: DownloadRequest):
     job_id = str(uuid.uuid4())
     download_jobs[job_id] = {'status': 'Preparing...', 'progress': '0', 'file_id': None}
-    background_tasks.add_task(run_download, job_id, data.url, data.format_id, data.ext)
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, run_download, job_id, data.url, data.format_id, data.ext)
     return {"job_id": job_id}
 
 @app.get("/progress/{job_id}")
@@ -168,4 +177,4 @@ async def get_file(file_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
