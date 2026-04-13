@@ -51,7 +51,7 @@ Open `http://localhost:8080`
 ## Notes
 
 - Without FFmpeg, downloads are limited to 720p muxed formats
-- With FFmpeg, full quality merging up to 4K is available
+- With FFmpeg, full quality merging up to 4K if available
 - Audio downloads are saved as WAV for Premiere Pro compatibility
 
 ---
