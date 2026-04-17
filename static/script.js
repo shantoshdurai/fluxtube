@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const durationTag = document.getElementById('duration-tag');
     const formatsGrid = document.getElementById('formats-grid');
     const tabButtons = document.querySelectorAll('.format-tabs button');
+    const ffmpegWarning = document.getElementById('ffmpeg-warning');
 
     let videoData = null;
     let currentTab = 'video';
@@ -17,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = videoUrlInput.value.trim();
         if (!url) return alert('Please enter a YouTube URL');
 
-        // Reset UI
         previewSection.classList.add('hidden');
         loader.classList.remove('hidden');
 
@@ -48,6 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
         videoUploader.textContent = data.uploader;
         durationTag.textContent = formatDuration(data.duration);
 
+        if (ffmpegWarning) {
+            ffmpegWarning.classList.toggle('hidden', data.ffmpeg !== false);
+        }
+
         renderFormats();
         previewSection.classList.remove('hidden');
     }
@@ -56,30 +60,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
         const s = seconds % 60;
-        return [h, m, s].map(v => v.toString().padStart(2, '0')).filter((v, i) => v !== '00' || i > 0).join(':');
+        return [h, m, s]
+            .map(v => v.toString().padStart(2, '0'))
+            .filter((v, i) => v !== '00' || i > 0)
+            .join(':');
     }
 
     function renderFormats() {
         formatsGrid.innerHTML = '';
-        const filtered = videoData.formats.filter(f => {
-            if (currentTab === 'video') return f.vcodec !== 'none';
-            return f.vcodec === 'none' && f.acodec !== 'none';
-        });
+        if (!videoData) return;
 
-        // Deduplicate common resolutions
-        const seen = new Set();
-        filtered.forEach(f => {
-            const res = f.resolution || (currentTab === 'audio' ? 'MP3/M4A' : 'Unknown');
-            if (seen.has(res) && currentTab === 'video') return;
-            seen.add(res);
+        const formats = videoData.formats.filter(f =>
+            currentTab === 'video' ? !f.is_audio : f.is_audio
+        );
 
+        formats.forEach(f => {
             const div = document.createElement('div');
             div.className = 'format-item';
+
+            const sizeLabel = f.filesize
+                ? `(${(f.filesize / (1024 * 1024)).toFixed(1)}MB)`
+                : '';
+
             div.innerHTML = `
-                <span class="format-res">${res}</span>
-                <span class="format-ext">${f.ext.toUpperCase()} ${f.filesize ? '(' + (f.filesize / (1024 * 1024)).toFixed(1) + 'MB)' : ''}</span>
+                <span class="format-res">${f.resolution}</span>
+                <span class="format-ext">${f.ext.toUpperCase()} ${sizeLabel}</span>
             `;
-            div.onclick = () => download(f);
+            div.onclick = () => startDownload(f);
             formatsGrid.appendChild(div);
         });
     }
@@ -93,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    async function download(format) {
+    async function startDownload(format) {
         const statusSection = document.getElementById('download-status');
         const progressBar = document.querySelector('.progress-fill');
         const statusText = document.getElementById('status-text');
@@ -108,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     url: videoUrlInput.value.trim(),
-                    format_id: format.format_id,
-                    ext: format.ext
+                    height: format.height,
+                    is_audio: format.is_audio,
                 })
             });
 
@@ -120,28 +127,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { job_id } = await response.json();
 
-            // Start polling progress
             const pollInterval = setInterval(async () => {
                 try {
                     const progRes = await fetch(`/progress/${job_id}`);
                     const data = await progRes.json();
 
-                    if (data.status === 'complete') {
+                    const statusStr = typeof data.status === 'string' ? data.status : JSON.stringify(data.status);
+                    if (statusStr === 'complete') {
                         clearInterval(pollInterval);
                         progressBar.style.width = '100%';
-                        statusText.textContent = 'Download Complete! Saving file...';
+                        statusText.textContent = 'Complete! Saving file...';
                         setTimeout(() => {
                             window.location.href = `/get-file/${data.file_id}`;
-                        }, 1000);
-                    } else if (data.status.startsWith('error')) {
+                        }, 800);
+                    } else if (statusStr.startsWith('error')) {
                         clearInterval(pollInterval);
-                        alert('Error: ' + data.status);
-                        statusSection.classList.add('hidden');
+                        const msg = statusStr.replace(/^error:\s*/, '');
+                        statusText.textContent = 'Error: ' + msg;
+                        statusText.style.color = '#ff4444';
+                        progressBar.style.background = '#ff4444';
+                        console.error('Download error:', statusStr);
                     } else {
-                        // Update UI
                         const progress = parseFloat(data.progress) || 0;
-                        progressBar.style.width = `${progress}%`;
-                        statusText.textContent = `${data.status} (${progress}%)`;
+                        progressBar.style.width = `${Math.max(progress, 2)}%`;
+                        statusText.textContent = statusStr;
                     }
                 } catch (e) {
                     console.error("Polling error:", e);
@@ -149,8 +158,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1000);
 
         } catch (error) {
-            alert('Download failed: ' + error.message);
-            statusSection.classList.add('hidden');
+            const msg = error?.message || JSON.stringify(error);
+            statusText.textContent = 'Error: ' + msg;
+            statusText.style.color = '#ff4444';
+            console.error('Download failed:', error);
         }
     }
 });
