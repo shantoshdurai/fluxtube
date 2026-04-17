@@ -39,7 +39,18 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 DOWNLOAD_DIR = os.path.join(os.getcwd(), "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+NO_CACHE = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
+@app.get("/static/{filename:path}")
+async def serve_static_no_cache(filename: str):
+    path = os.path.join("static", filename)
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404)
+    return FileResponse(path, headers=NO_CACHE)
 
 download_jobs = {}
 
@@ -50,8 +61,11 @@ class VideoURL(BaseModel):
 
 class DownloadRequest(BaseModel):
     url: str
-    height: int   # e.g. 2160, 1080, 720 — 0 means audio-only
+    # Accept either the new schema (height + is_audio) or the old one (format_id + ext)
+    height: int | None = None
     is_audio: bool = False
+    format_id: str | None = None
+    ext: str | None = None
 
 
 def find_ffmpeg():
@@ -79,7 +93,7 @@ def has_ffmpeg():
 
 @app.get("/")
 async def read_index():
-    return FileResponse('static/index.html')
+    return FileResponse('static/index.html', headers=NO_CACHE)
 
 
 @app.post("/info")
@@ -183,11 +197,15 @@ def run_download(job_id, url, height, is_audio):
             f_str = "bestaudio/best"
     else:
         if ffmpeg:
-            # Video-only stream at exact height + best audio merged by FFmpeg
-            f_str = f"bestvideo[height={height}]+bestaudio/bestvideo[height<={height}]+bestaudio/best[height<={height}]/best"
+            if height >= 9999:
+                # Best available quality
+                f_str = "bestvideo+bestaudio/best"
+            else:
+                # Video-only stream at exact height + best audio merged by FFmpeg
+                f_str = f"bestvideo[height={height}]+bestaudio/bestvideo[height<={height}]+bestaudio/best[height<={height}]/best"
         else:
-            # No FFmpeg: best muxed stream at or below requested height
-            f_str = f"best[height<={height}]/best"
+            # No FFmpeg: best muxed stream
+            f_str = "best" if height >= 9999 else f"best[height<={height}]/best"
 
     ydl_opts = {
         'format': f_str,
@@ -242,8 +260,21 @@ def run_download(job_id, url, height, is_audio):
 async def download_video(data: DownloadRequest):
     job_id = str(uuid.uuid4())
     download_jobs[job_id] = {'status': 'Preparing...', 'progress': 0, 'file_id': None}
+
+    # Resolve old/new request formats
+    height = data.height
+    is_audio = data.is_audio
+    if height is None:
+        # Old schema fallback: infer from format_id / ext
+        if data.ext == 'mp3' or (data.format_id and 'audio' in data.format_id.lower()):
+            is_audio = True
+            height = 0
+        else:
+            # Default to best quality available
+            height = 9999
+
     loop = asyncio.get_event_loop()
-    loop.run_in_executor(None, run_download, job_id, data.url, data.height, data.is_audio)
+    loop.run_in_executor(None, run_download, job_id, data.url, height, is_audio)
     return {"job_id": job_id}
 
 
