@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     url: videoUrlInput.value.trim(),
                     height: format.height,
                     is_audio: format.is_audio,
+                    audio_format: format.audio_format || 'mp3',
                 })
             });
 

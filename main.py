@@ -64,6 +64,7 @@ class DownloadRequest(BaseModel):
     # Accept either the new schema (height + is_audio) or the old one (format_id + ext)
     height: int | None = None
     is_audio: bool = False
+    audio_format: str = "mp3"  # mp3 or wav
     format_id: str | None = None
     ext: str | None = None
 
@@ -145,10 +146,19 @@ async def get_video_info(data: VideoURL):
         if has_audio_stream or video_formats:
             result_formats.append({
                 'height': 0,
-                'resolution': 'Audio Only',
+                'resolution': 'MP3 Audio',
+                'ext': 'mp3',
+                'filesize': None,
+                'is_audio': True,
+                'audio_format': 'mp3',
+            })
+            result_formats.append({
+                'height': 0,
+                'resolution': 'WAV Audio',
                 'ext': 'wav',
                 'filesize': None,
                 'is_audio': True,
+                'audio_format': 'wav',
             })
 
         return {
@@ -184,7 +194,7 @@ def progress_hook(d, job_id):
         download_jobs[job_id]['status'] = 'Merging streams...'
 
 
-def run_download(job_id, url, height, is_audio):
+def run_download(job_id, url, height, is_audio, audio_format="mp3"):
     output_tmpl = os.path.join(DOWNLOAD_DIR, f"{job_id}_%(title).100s.%(ext)s")
     ffmpeg_path = find_ffmpeg()
     ffmpeg = ffmpeg_path is not None
@@ -223,8 +233,8 @@ def run_download(job_id, url, height, is_audio):
     if is_audio and ffmpeg:
         ydl_opts['postprocessors'] = [{
             'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'wav',
-            'preferredquality': '0',
+            'preferredcodec': audio_format,  # mp3 or wav
+            'preferredquality': '192' if audio_format == 'mp3' else '0',
         }]
 
     print(f"[{job_id}] format='{f_str}' ffmpeg={ffmpeg} height={height} audio={is_audio}")
@@ -274,7 +284,7 @@ async def download_video(data: DownloadRequest):
             height = 9999
 
     loop = asyncio.get_event_loop()
-    loop.run_in_executor(None, run_download, job_id, data.url, height, is_audio)
+    loop.run_in_executor(None, run_download, job_id, data.url, height, is_audio, data.audio_format)
     return {"job_id": job_id}
 
 
