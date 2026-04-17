@@ -123,6 +123,13 @@ echo    Press Ctrl+C to stop
 echo  ===================================
 echo.
 
+REM Kill anything already on port 8080
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":8080 " ^| findstr "LISTENING"') do (
+    echo  Killing old process on port 8080 (PID %%p)...
+    taskkill /F /PID %%p >nul 2>&1
+)
+timeout /t 1 /nobreak >nul
+
 start "" cmd /c "timeout /t 4 /nobreak >nul && start http://localhost:8080"
 
 set PYTHONUTF8=1

@@ -20,12 +20,21 @@ import uuid
 import asyncio
 
 import yt_dlp
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 app = FastAPI()
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(request: Request, exc: RequestValidationError):
+    body = await request.body()
+    print(f"\n[422] Validation error on {request.url.path}")
+    print(f"  Body received: {body.decode('utf-8', errors='replace')}")
+    print(f"  Errors: {exc.errors()}\n")
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
 DOWNLOAD_DIR = os.path.join(os.getcwd(), "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
