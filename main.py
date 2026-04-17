@@ -54,8 +54,27 @@ class DownloadRequest(BaseModel):
     is_audio: bool = False
 
 
+def find_ffmpeg():
+    # Check PATH first
+    p = shutil.which("ffmpeg")
+    if p:
+        return p
+    # Check winget install location
+    import glob
+    patterns = [
+        os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_*\ffmpeg-*\bin\ffmpeg.exe"),
+        os.path.expandvars(r"%LOCALAPPDATA%\ffmpeg\ffmpeg-*\bin\ffmpeg.exe"),
+        r"C:\ffmpeg\bin\ffmpeg.exe",
+        r"C:\Program Files\ffmpeg\bin\ffmpeg.exe",
+    ]
+    for pattern in patterns:
+        matches = glob.glob(pattern)
+        if matches:
+            return matches[0]
+    return None
+
 def has_ffmpeg():
-    return shutil.which("ffmpeg") is not None
+    return find_ffmpeg() is not None
 
 
 @app.get("/")
@@ -124,7 +143,7 @@ async def get_video_info(data: VideoURL):
             'duration': info.get('duration'),
             'uploader': info.get('uploader'),
             'formats': result_formats,
-            'ffmpeg': has_ffmpeg(),
+            'ffmpeg': find_ffmpeg() is not None,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -153,7 +172,8 @@ def progress_hook(d, job_id):
 
 def run_download(job_id, url, height, is_audio):
     output_tmpl = os.path.join(DOWNLOAD_DIR, f"{job_id}_%(title).100s.%(ext)s")
-    ffmpeg = has_ffmpeg()
+    ffmpeg_path = find_ffmpeg()
+    ffmpeg = ffmpeg_path is not None
 
     if is_audio:
         if ffmpeg:
@@ -174,11 +194,13 @@ def run_download(job_id, url, height, is_audio):
         'outtmpl': output_tmpl,
         'noplaylist': True,
         'progress_hooks': [lambda d: progress_hook(d, job_id)],
-        'quiet': True,           # suppress yt-dlp stdout (avoids Windows charmap errors)
+        'quiet': True,
         'no_warnings': True,
         'merge_output_format': 'mp4',
-        'encoding': 'utf-8',     # force utf-8 for yt-dlp internal output
+        'encoding': 'utf-8',
     }
+    if ffmpeg_path:
+        ydl_opts['ffmpeg_location'] = os.path.dirname(ffmpeg_path)
 
     if is_audio and ffmpeg:
         ydl_opts['postprocessors'] = [{
