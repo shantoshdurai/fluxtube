@@ -64,7 +64,7 @@ class DownloadRequest(BaseModel):
     # Accept either the new schema (height + is_audio) or the old one (format_id + ext)
     height: int | None = None
     is_audio: bool = False
-    audio_format: str = "mp3"  # mp3 or wav
+    audio_format: str = "default"  # mp3, wav, default
     format_id: str | None = None
     ext: str | None = None
 
@@ -141,6 +141,15 @@ async def get_video_info(data: VideoURL):
                 'ext': vf['ext'],
                 'filesize': vf['filesize'],
                 'is_audio': False,
+                'audio_format': 'default',
+            })
+            result_formats.append({
+                'height': vf['height'],
+                'resolution': f"{vf['width']}x{vf['height']} (WAV Audio)",
+                'ext': 'mov',
+                'filesize': vf['filesize'],
+                'is_audio': False,
+                'audio_format': 'wav',
             })
 
         if has_audio_stream or video_formats:
@@ -224,9 +233,11 @@ def run_download(job_id, url, height, is_audio, audio_format="mp3"):
         'progress_hooks': [lambda d: progress_hook(d, job_id)],
         'quiet': True,
         'no_warnings': True,
-        'merge_output_format': 'mp4',
         'encoding': 'utf-8',
     }
+    
+    ydl_opts['merge_output_format'] = 'mp4'
+
     if ffmpeg_path:
         ydl_opts['ffmpeg_location'] = os.path.dirname(ffmpeg_path)
 
@@ -243,15 +254,34 @@ def run_download(job_id, url, height, is_audio, audio_format="mp3"):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.extract_info(url, download=True)
 
+        target_file = None
         for f in os.listdir(DOWNLOAD_DIR):
             if f.startswith(job_id):
-                download_jobs[job_id]['file_id'] = f
-                download_jobs[job_id]['status'] = 'complete'
-                download_jobs[job_id]['progress'] = 100
-                print(f"[{job_id}] Done: {f}")
-                return
+                target_file = os.path.join(DOWNLOAD_DIR, f)
+                break
 
-        raise Exception("File not found after download.")
+        if not target_file:
+            raise Exception("File not found after download.")
+            
+        if not is_audio and ffmpeg and audio_format == 'wav':
+            download_jobs[job_id]['status'] = 'Processing for Premiere Pro (H.264 + WAV)...'
+            import subprocess
+            mov_file = target_file.rsplit('.', 1)[0] + '_pro.mov'
+            # Transcode to H.264 and PCM S16LE for maximum compatibility
+            cmd = [
+                ffmpeg_path, '-y', '-i', target_file,
+                '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', 
+                '-pix_fmt', 'yuv420p', '-c:a', 'pcm_s16le', mov_file
+            ]
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            os.remove(target_file)
+            target_file = mov_file
+
+        download_jobs[job_id]['file_id'] = os.path.basename(target_file)
+        download_jobs[job_id]['status'] = 'complete'
+        download_jobs[job_id]['progress'] = 100
+        print(f"[{job_id}] Done: {target_file}")
+        return
 
     except Exception as e:
         import traceback
